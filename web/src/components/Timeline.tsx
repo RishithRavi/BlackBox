@@ -39,6 +39,7 @@ export function Timeline({ records, selectedSeq, onSelect }: Props) {
               aria-current={sel ? "true" : undefined}
               onClick={() => onSelect(r.seq)}
             >
+              <span className="dot" aria-hidden="true" />
               <span className="seq">#{r.seq}</span>
               <span className="stepid">{event.step_id}</span>
               <span className="type">{TYPE_LABEL[event.type]}</span>

@@ -10,16 +10,22 @@ const ROW_H = 34;
 const WIDTH = 680;
 
 const EDGE_STYLE: Record<Relation, { stroke: string; dash?: string }> = {
-  parent: { stroke: "#94a3b8" },
-  contains: { stroke: "#cbd5e1", dash: "3 3" },
-  supported_by: { stroke: "#15803d" },
-  derived_from: { stroke: "#b45309", dash: "6 3" },
+  parent: { stroke: "#55677e" },
+  contains: { stroke: "#39465a", dash: "3 3" },
+  supported_by: { stroke: "#3fb950" },
+  derived_from: { stroke: "#d29922", dash: "6 3" },
 };
 
 const KIND_FILL: Record<NodeKind, string> = {
-  step: "#e2e8f0",
-  claim: "#dbeafe",
-  evidence: "#dcfce7",
+  step: "#1c2735",
+  claim: "#1b2a45",
+  evidence: "#14301f",
+};
+
+const KIND_STROKE: Record<NodeKind, string> = {
+  step: "#33445a",
+  claim: "#2c4a7a",
+  evidence: "#25633c",
 };
 
 export function GraphView({ graph, onSelectStep }: Props) {
@@ -102,7 +108,7 @@ export function GraphView({ graph, onSelectStep }: Props) {
                 height={22}
                 rx={6}
                 fill={KIND_FILL[n.kind]}
-                stroke="#94a3b8"
+                stroke={KIND_STROKE[n.kind]}
               />
               <text textAnchor="middle" dominantBaseline="middle" className="nodelabel">
                 {n.label.length > 18 ? `${n.label.slice(0, 17)}…` : n.label}
