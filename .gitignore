@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Black Box detector local state (Session A owned)
+detector/.data/
+detector/.venv/
+
+# OS
+.DS_Store
