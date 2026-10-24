@@ -1,3 +1,4 @@
+import { scenarioStepLabel } from "./scenarios";
 import type { StepRecord } from "./types";
 
 export const RULE_TITLES: Record<string, string> = {
@@ -5,15 +6,17 @@ export const RULE_TITLES: Record<string, string> = {
   package_missing: "Package not found",
   symbol_missing: "Missing function",
   claim_without_action: "Unverified test claim",
-  unsupported_claim: "Unsupported retry claim",
+  unsupported_claim: "Unsupported claim",
   unknown_tool: "Unknown tool",
   tool_schema: "Invalid tool arguments",
   loop: "Repeated tool call",
 };
 export function stepTitle(r: StepRecord): string {
+  const scenarioLabel = scenarioStepLabel(r);
+  if (scenarioLabel) return scenarioLabel;
   const rule = r.verdict.flags[0]?.rule;
   if (rule) return RULE_TITLES[rule] ?? rule.replaceAll("_", " ");
-  if (r.event.type === "user") return "User requested cache expiry fix";
+  if (r.event.type === "user") return r.event.content.slice(0, 90);
   if (r.event.tool) {
     const names: Record<string, string> = {
       inspect_repo: "Inspect repository",

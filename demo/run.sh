@@ -12,7 +12,12 @@ choose_port() {
 }
 API_PORT=$(choose_port "${BLACKBOX_API_PORT:-8000}")
 WEB_PORT=$(choose_port "${BLACKBOX_WEB_PORT:-5173}")
-RUN_ID=${BLACKBOX_RUN_ID:-"laya_$(date +%s)"}
+case "${BLACKBOX_SCENARIO:-cache}" in
+  cache) RECORDING=demo.jsonl; RUN_PREFIX=laya ;;
+  checkout) RECORDING=checkout_reliability.jsonl; RUN_PREFIX=checkout ;;
+  *) echo "Unknown BLACKBOX_SCENARIO; choose cache or checkout"; exit 1 ;;
+esac
+RUN_ID=${BLACKBOX_RUN_ID:-"${RUN_PREFIX}_$(date +%s)"}
 export SEMANTIC_ENABLED=${SEMANTIC_ENABLED:-1}
 # Local inference can exceed the aspirational 150ms budget; never silently time out every claim.
 export SEMANTIC_TIMEOUT_MS=${SEMANTIC_TIMEOUT_MS:-2000}
@@ -68,7 +73,7 @@ echo
 echo "detector: $HEALTH"
 echo "dashboard (actual backend): http://127.0.0.1:$WEB_PORT/?run_id=$RUN_ID"
 echo "in another terminal, replay the recorded run:"
-echo "  cd agent && uv run python replay.py runs/demo.jsonl \\"
+echo "  cd agent && uv run python replay.py runs/$RECORDING \\"
 echo "    --target http://127.0.0.1:$API_PORT --run-id $RUN_ID --delay-ms 350"
 echo "Ctrl+C stops both servers."
 wait

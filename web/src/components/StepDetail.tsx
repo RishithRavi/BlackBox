@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { ArrowUpRight, FileText, Info } from "@phosphor-icons/react";
 import { stepIdFromNodeId } from "../runState";
 import {
@@ -36,6 +37,7 @@ export function StepDetail({
   onJumpToStep: (id: string) => void;
   sample: boolean;
 }) {
+  const titleId = useId();
   if (!record)
     return (
       <aside className="panel detail-panel empty">
@@ -89,13 +91,13 @@ export function StepDetail({
   const isClaim = event.type === "llm" || event.type === "final";
   const primary = flags[0];
   return (
-    <aside className="panel detail-panel" aria-labelledby="detail-title">
+    <aside className="panel detail-panel" aria-labelledby={titleId}>
       <div className="detail-label">
         <h2>{isClaim ? "Claim details" : "Step details"}</h2>
         <span className="step-pill">{String(record.seq).padStart(2, "0")}</span>
       </div>
       <div className="detail-title-row">
-        <h3 id="detail-title">{stepTitle(record)}</h3>
+        <h3 id={titleId}>{stepTitle(record)}</h3>
         <StatusBadge
           level={verdict.level}
           unverified={verdict.semantic_status === "unavailable"}

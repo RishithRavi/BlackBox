@@ -12,6 +12,7 @@ import {
   Circle,
   Info,
 } from "@phosphor-icons/react";
+import { scenarioExamples, scenarioForRun } from "./scenarios";
 import { formatLatency } from "./presentation";
 import { API_BASE, USE_MOCK } from "./api";
 import { sampleGraph, sampleRecords } from "./demoData";
@@ -43,6 +44,7 @@ export default function App() {
   const [speed, setSpeed] = useState("1");
   const allRecords = sample ? sampleRecords : run.records;
   const records = cursor === null ? allRecords : allRecords.slice(0, cursor);
+  const scenario = scenarioForRun(sample ? "sample" : run.runId);
   const fullGraph = sample ? sampleGraph : run.graph;
   const graph = fullGraph
     ? {
@@ -190,7 +192,7 @@ export default function App() {
         <div className="run-header">
           <div>
             <div className="run-title">
-              <h1>Fix cache expiry</h1>
+              <h1>{scenario?.title ?? "Agent run"}</h1>
               <span
                 className="observe-badge"
                 title="Findings are recorded without stopping agent actions."
@@ -199,7 +201,10 @@ export default function App() {
               </span>
             </div>
             <p className="subtitle">
-              Coding agent <span>·</span> Recorded replay
+              {scenario?.phases.length
+                ? "Four recorded agent roles"
+                : "Coding agent"}{" "}
+              <span>·</span> Recorded replay
             </p>
           </div>
           <div className="replay-controls">
@@ -288,6 +293,17 @@ export default function App() {
             </button>
           </div>
         ) : null}
+        {scenario?.phases.length ? (
+          <div className="scenario-overview">
+            <span className="scenario-label">DETAILED SCENARIO</span>
+            <span>{scenario.step_count} recorded steps</span>
+            <span>4 agent roles</span>
+            <span>{scenario.phases.length} phases</span>
+            <button onClick={() => setSettings(true)}>
+              Switch scenario <CaretDown size={12} />
+            </button>
+          </div>
+        ) : null}
         <DetectionPipeline
           record={selected}
           sample={sample}
@@ -337,6 +353,8 @@ export default function App() {
                 graph={graph}
                 records={records}
                 selectedStep={selected?.event.step_id ?? null}
+                scenario={scenario}
+                sample={sample}
                 onSelectStep={jump}
               />
             )}
@@ -426,6 +444,22 @@ export default function App() {
               </button>
             </div>
             <p>Open a recorded run or explore the sample dashboard.</p>
+            <div className="scenario-picker">
+              {scenarioExamples.map((example) => (
+                <button
+                  key={example.id}
+                  onClick={() => setMode(false, example.run_id)}
+                >
+                  <strong>{example.title}</strong>
+                  <span>
+                    {example.step_count} recorded steps
+                    {example.phases.length
+                      ? ` · ${example.phases.length} phases`
+                      : " · original demo"}
+                  </span>
+                </button>
+              ))}
+            </div>
             <form
               onSubmit={(e) => {
                 e.preventDefault();

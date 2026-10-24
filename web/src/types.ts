@@ -2,7 +2,8 @@
 
 export type EventType = "user" | "llm" | "tool_call" | "tool_result" | "final";
 export type Level = "ok" | "warn" | "block";
-export type SemanticStatus = "laya" | "fallback" | "unavailable" | "not_applicable";
+export type SemanticStatus =
+  "laya" | "fallback" | "unavailable" | "not_applicable";
 
 export interface ToolSpec {
   name: string;
@@ -58,13 +59,15 @@ export interface StreamEnvelope {
 }
 
 export type NodeKind = "step" | "claim" | "evidence";
-export type Relation = "parent" | "contains" | "supported_by" | "derived_from";
+export type Relation =
+  "parent" | "contains" | "supported_by" | "derived_from" | "checked_against";
 
 export interface GraphNode {
   id: string;
   kind: NodeKind;
   label: string;
   step_id?: string;
+  status?: "supported" | "unsupported" | "unknown";
 }
 
 export interface GraphEdge {

@@ -135,7 +135,8 @@
         "id": { "type": "string", "minLength": 1 },
         "kind": { "enum": ["step", "claim", "evidence"] },
         "label": { "type": "string" },
-        "step_id": { "type": "string", "minLength": 1 }
+        "step_id": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["supported", "unsupported", "unknown"] }
       }
     },
     "GraphEdge": {
@@ -147,7 +148,7 @@
         "source": { "type": "string", "minLength": 1 },
         "target": { "type": "string", "minLength": 1 },
         "relation": {
-          "enum": ["parent", "contains", "supported_by", "derived_from"]
+          "enum": ["parent", "contains", "supported_by", "derived_from", "checked_against"]
         }
       }
     },

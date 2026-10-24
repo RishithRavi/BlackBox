@@ -31,7 +31,7 @@ uv run --extra laya pytest
 | `GET /health` | `{"status","schema_version","semantic_status"}` |
 | `GET /runs/{run_id}/steps` | persisted `StepRecord`s, contiguous `seq` from 1 |
 | `GET /runs/{run_id}/stream?after=N` | SSE catch-up + tail, `event: step`, `id: <seq>`, comment heartbeat ~15 s, honors `Last-Event-ID` |
-| `GET /runs/{run_id}/graph` | step/claim/evidence nodes, `parent`/`contains`/`supported_by` edges |
+| `GET /runs/{run_id}/graph` | step/claim/evidence nodes, `parent`/`contains`/`supported_by`/`derived_from`/`checked_against` edges |
 | `GET /runs/{run_id}/metrics` | step/flag/level counts, nearest-rank P50/P95, semantic-status counts |
 
 The frozen wire contract is `../schema.json` (JSON Schema 2020-12, `$defs`
@@ -135,9 +135,12 @@ bounds the wait, and late results are discarded.
   claims per event; evidence text is bounded to the English checkpoint's
   512-token context (~1400 chars) — set `LAYA_MODEL_ID=multilingual` for a
   larger context if your fixtures need it.
-- `derived_from` edges are not emitted: the replay does not mark explicit
-  claim dependencies, and event order alone is not treated as causal
-  spread.
+- `derived_from` links a recorded tool result to its exact tool call via
+  `tool_call_id`. `contains` links steps to their persisted claims/evidence.
+  `checked_against` links a finding to its referenced evidence; it does not
+  imply support. Only persisted supported claims get `supported_by` links.
+  Claim nodes expose their stored status. Parent order and repeated language
+  do not establish causal spread between claims.
 - Warm-path latency target is aspirational (<200 ms/step); see metrics
   for the measured P50/P95 on your machine.
 

@@ -1,0 +1,98 @@
+{
+  "schema_version": "1",
+  "scenario": "checkout_reliability",
+  "source_run": "agent/runs/checkout_reliability.jsonl",
+  "cases": [
+    {
+      "step_id": "c014",
+      "expected_rules": [
+        "symbol_missing"
+      ],
+      "expected_level": "block",
+      "semantic_required": false
+    },
+    {
+      "step_id": "c016",
+      "expected_rules": [
+        "package_missing"
+      ],
+      "expected_level": "block",
+      "semantic_required": false
+    },
+    {
+      "step_id": "c029",
+      "expected_rules": [
+        "symbol_missing"
+      ],
+      "expected_level": "block",
+      "semantic_required": false
+    },
+    {
+      "step_id": "c036",
+      "expected_rules": [
+        "unsupported_claim"
+      ],
+      "expected_level": "warn",
+      "semantic_required": true
+    },
+    {
+      "step_id": "c039",
+      "expected_rules": [
+        "claim_without_action"
+      ],
+      "expected_level": "block",
+      "semantic_required": false
+    },
+    {
+      "step_id": "c046",
+      "expected_rules": [
+        "loop"
+      ],
+      "expected_level": "warn",
+      "semantic_required": false
+    },
+    {
+      "step_id": "c048",
+      "expected_rules": [
+        "claim_without_action"
+      ],
+      "expected_level": "block",
+      "semantic_required": false
+    },
+    {
+      "step_id": "c058",
+      "expected_rules": [
+        "arg_provenance"
+      ],
+      "expected_level": "block",
+      "semantic_required": false
+    },
+    {
+      "step_id": "c073",
+      "expected_rules": [
+        "arg_provenance"
+      ],
+      "expected_level": "block",
+      "semantic_required": false
+    }
+  ],
+  "clean_step_ids": [
+    "c012",
+    "c018",
+    "c022",
+    "c025",
+    "c027",
+    "c031",
+    "c035",
+    "c051",
+    "c054",
+    "c055",
+    "c061",
+    "c063",
+    "c071"
+  ],
+  "notes": [
+    "Recorded agent roles are synthetic; all detector verdicts must come from the real backend.",
+    "Only known deterministic cases and one semantic failure are required by this oracle. Other model judgments remain actual observations."
+  ]
+}

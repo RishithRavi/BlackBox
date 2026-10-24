@@ -136,3 +136,28 @@ def test_sse_empty_run_opens(make_app):
                              heartbeat_s=0.05)) as c:
         lines = _read_sse(c, "/runs/nope/stream?after=0", max_lines=2)
     assert lines == [] or all(l.startswith(":") or l == "" for l in lines)
+
+
+def test_graph_exposes_evidence_origin_and_explicit_result_link(client):
+    _seed_demo(client)
+    graph = client.get('/runs/r1/graph').json()
+    assert any(e['relation'] == 'derived_from' and e['source'] == 'step:s02_res'
+               and e['target'] == 'step:s02_call' for e in graph['edges'])
+    assert any(e['relation'] == 'contains' and e['source'] == 'step:s02_res'
+               and e['target'] == 'evidence:s02_res:repo' for e in graph['edges'])
+    supported = [n for n in graph['nodes'] if n['kind'] == 'claim']
+    assert any(n['status'] == 'supported' for n in supported)
+
+
+def test_negative_evidence_is_context_not_support(client):
+    _seed_demo(client)
+    post(client, ev('s04', 'tool_call', 'missing function', parent='s03',
+                   tool={'name': 'call_function', 'args': {'symbol': 'missing_helper'}},
+                   call_id='missing_call'))
+    graph = client.get('/runs/r1/graph').json()
+    assert any(e['source'] == 'step:s04' and e['target'] == 'evidence:s02_res:repo'
+               and e['relation'] == 'checked_against' for e in graph['edges'])
+    claims = [n for n in graph['nodes'] if n.get('step_id') == 's04' and n['kind'] == 'claim']
+    assert claims and all(n['status'] == 'unsupported' for n in claims)
+    ids = {n['id'] for n in claims}
+    assert not any(e['source'] in ids and e['relation'] == 'supported_by' for e in graph['edges'])

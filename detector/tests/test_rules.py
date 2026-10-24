@@ -189,3 +189,13 @@ def test_clean_controls_stay_clean(client):
         v = post(client, e).json()
         assert v["level"] == "ok", (e["step_id"], v)
         assert v["flags"] == []
+
+
+def test_numeric_provenance_accepts_sentence_punctuation_but_not_partial_numbers(client):
+    post(client, ev("s01", "user", "Review issues 931 and 932. Budget 1933 and 934.5."))
+    for number, allowed in [(931, True), (932, True), (933, False), (934, False)]:
+        response = post(client, ev(
+            f"s{number}", "tool_call", "prepare PR",
+            tool={"name": "create_pr", "args": {"title": "Review", "body": "Review only", "issue_id": number}},
+            call_id=f"call{number}"))
+        assert ("arg_provenance" not in _flag_rules(response.json())) == allowed

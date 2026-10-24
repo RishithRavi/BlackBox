@@ -70,7 +70,12 @@ class RunIndex:
         create_pr.issue_id) must appear in earlier user/tool evidence.
         """
         token = re.escape(str(value))
-        pattern = re.compile(rf"(?<![\w.]){token}(?![\w.])")
+        # A sentence-ending period is punctuation, while .<digit> continues
+        # a numeric token. Never accept 932 inside 1932 or 932.5.
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            pattern = re.compile(rf"(?<![\w.]){token}(?!\w|\.\d)")
+        else:
+            pattern = re.compile(rf"(?<![\w.]){token}(?![\w.])")
         for ev_id, text in self.searchable:
             if pattern.search(text):
                 return ev_id

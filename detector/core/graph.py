@@ -11,6 +11,7 @@ from .store import Store
 def build_graph(store: Store, run_id: str) -> dict[str, Any]:
     nodes: list[dict[str, Any]] = []
     edges: list[dict[str, Any]] = []
+    calls: dict[str, str] = {}
     for rec in store.all_steps(run_id):
         ev = rec["event"]
         sid = ev["step_id"]
@@ -18,7 +19,14 @@ def build_graph(store: Store, run_id: str) -> dict[str, Any]:
             {"id": f"step:{sid}", "kind": "step", "label": sid, "step_id": sid}
         )
         parent = ev.get("parent_step_id")
-        if parent:
+        call_id = ev.get("tool_call_id")
+        call_step = calls.get(call_id) if ev["type"] == "tool_result" else None
+        if ev["type"] == "tool_call" and call_id:
+            calls[call_id] = sid
+        if call_step:
+            edges.append({"id": f"e:result:{sid}", "source": f"step:{sid}",
+                          "target": f"step:{call_step}", "relation": "derived_from"})
+        if parent and parent != call_step:
             edges.append(
                 {
                     "id": f"e:parent:{sid}",
@@ -35,6 +43,7 @@ def build_graph(store: Store, run_id: str) -> dict[str, Any]:
                     "kind": "claim",
                     "label": claim["text"][:80],
                     "step_id": sid,
+                    "status": claim["status"],
                 }
             )
             edges.append(
@@ -56,6 +65,16 @@ def build_graph(store: Store, run_id: str) -> dict[str, Any]:
                 )
         for node in rec["evidence"]:
             nodes.append(node)
+            edges.append({"id": f"e:evidence:{node['id']}", "source": f"step:{sid}",
+                          "target": node["id"], "relation": "contains"})
+        checked: set[str] = set()
+        for flag in rec["verdict"]["flags"]:
+            for evidence_id in flag.get("evidence_ids", []):
+                if evidence_id not in checked:
+                    checked.add(evidence_id)
+                    edges.append({"id": f"e:check:{sid}:{evidence_id}",
+                                  "source": f"step:{sid}", "target": evidence_id,
+                                  "relation": "checked_against"})
     return {"run_id": run_id, "nodes": nodes, "edges": edges}
 
 

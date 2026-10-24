@@ -70,6 +70,23 @@ clean control.
 The registry facts are `recorded_registry_snapshot` payloads: they are
 recorded evidence, not proof of current registry state.
 
+## Detailed scenario: checkout reliability
+
+For a longer walkthrough, start `BLACKBOX_SCENARIO=checkout ./demo/run.sh`
+and execute the replay command it prints. Open its printed dashboard URL,
+then use **Graph → Expand graph** to explore the full evidence map.
+
+The 76-step recording spans five phases and four synthetic agent roles:
+inventory repair, payment hardening, integration failures/recovery, and release
+review. Nine required planted checks cover invented functions/packages, false
+passing-test claims, repeated calls, unsupported summaries and fabricated issue
+references. The real local validation produced **137 nodes and 155 links**.
+
+**Runs / Switch scenario** provides shortcuts to the original and detailed
+persisted example IDs; replay that recording first if the chosen ID is empty.
+A custom `checkout_…` run ID keeps the detailed labels and phase navigation.
+See [the walkthrough and honest model results](demo/CHECKOUT_SCENARIO.md).
+
 ## Dashboard
 
 The dashboard uses the light design from the approved mockups. There is no dark theme.
@@ -78,7 +95,7 @@ The dashboard uses the light design from the approved mockups. There is no dark 
 - **Timeline / Graph tabs** switch between recorded activity and an interactive evidence graph.
 - **Timeline** shows action summaries, findings, exact backend latency and an All / Flagged filter. Selecting a row opens its detail panel; Follow latest scrolls to incoming steps.
 - **Step details** highlight flagged arguments/claims, show referenced evidence or explicitly labeled earlier context, and link back to source steps. Full original events remain available in an expandable section.
-- **Graph** supports node selection, keyboard activation, pan/zoom, fit view, and an All nodes / Selected step scope. Parent links show sequence only. Missing semantic checks show Unverified rather than Unsupported.
+- **Graph** supports node selection, keyboard activation, pan/zoom, fit view, node search, phase filtering and Selected + neighbours scope. Larger maps pack evidence-connected groups and include a minimap. Expand the graph for more room and an adjacent inspector. Sequence/tool-flow links can be toggled; inspected evidence stays distinct from support. Missing semantic checks show Unverified rather than Unsupported.
 - **Replay controls** play, pause, resume, restart and change the speed of existing records. They only change the presentation: no tool execution, detector calls, stored verdict changes or SSE ingestion is paused.
 - **Run switching** is available from Runs, Settings or the run ID. Snapshots load before SSE catch-up/tail; duplicate sequences and late callbacks from previous runs are ignored.
 - The summary shows visible steps, flagged steps (not finding count), P95 backend latency, and actual verifier readiness. During playback, counts/latency reflect the visible prefix. Backend metrics are also fetched for integration readiness.
