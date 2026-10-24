@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blackbox.local/schema.json",
+  "title": "Black Box v1 wire contract",
+  "$defs": {
+    "Event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "run_id",
+        "step_id",
+        "parent_step_id",
+        "agent",
+        "type",
+        "content",
+        "ts"
+      ],
+      "properties": {
+        "schema_version": { "const": "1" },
+        "run_id": { "type": "string", "minLength": 1 },
+        "step_id": { "type": "string", "minLength": 1 },
+        "parent_step_id": { "type": ["string", "null"], "minLength": 1 },
+        "agent": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["user", "llm", "tool_call", "tool_result", "final"] },
+        "content": { "type": "string" },
+        "tool": { "$ref": "#/$defs/Tool" },
+        "tool_call_id": { "type": "string", "minLength": 1 },
+        "ts": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "tool_call" } } },
+          "then": {
+            "required": ["tool", "tool_call_id"]
+          },
+          "else": {
+            "not": { "required": ["tool"] }
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "enum": ["tool_call", "tool_result"] } }
+          },
+          "then": {
+            "required": ["tool_call_id"]
+          },
+          "else": {
+            "not": { "required": ["tool_call_id"] }
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "tool_result" } }
+          },
+          "then": {
+            "not": { "required": ["tool"] }
+          }
+        }
+      ]
+    },
+    "Tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "args"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "args": { "type": "object" }
+      }
+    },
+    "Finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule",
+        "message",
+        "span",
+        "field_path",
+        "evidence_ids",
+        "confidence"
+      ],
+      "properties": {
+        "rule": { "type": "string", "minLength": 1 },
+        "message": { "type": "string" },
+        "span": { "type": "string" },
+        "field_path": { "type": "string" },
+        "evidence_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "Verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "run_id",
+        "step_id",
+        "score",
+        "level",
+        "flags",
+        "latency_ms",
+        "semantic_status"
+      ],
+      "properties": {
+        "schema_version": { "const": "1" },
+        "run_id": { "type": "string", "minLength": 1 },
+        "step_id": { "type": "string", "minLength": 1 },
+        "score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "level": { "enum": ["ok", "warn", "block"] },
+        "flags": { "type": "array", "items": { "$ref": "#/$defs/Finding" } },
+        "latency_ms": { "type": "number", "minimum": 0 },
+        "semantic_status": {
+          "enum": ["laya", "fallback", "unavailable", "not_applicable"]
+        }
+      }
+    },
+    "StepRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seq", "event", "verdict"],
+      "properties": {
+        "seq": { "type": "integer", "minimum": 1 },
+        "event": { "$ref": "#/$defs/Event" },
+        "verdict": { "$ref": "#/$defs/Verdict" }
+      }
+    },
+    "GraphNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "label"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["step", "claim", "evidence"] },
+        "label": { "type": "string" },
+        "step_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "GraphEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source", "target", "relation"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "minLength": 1 },
+        "relation": {
+          "enum": ["parent", "contains", "supported_by", "derived_from"]
+        }
+      }
+    },
+    "Graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "nodes", "edges"],
+      "properties": {
+        "run_id": { "type": "string", "minLength": 1 },
+        "nodes": { "type": "array", "items": { "$ref": "#/$defs/GraphNode" } },
+        "edges": { "type": "array", "items": { "$ref": "#/$defs/GraphEdge" } }
+      }
+    },
+    "Metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "step_count",
+        "flag_count",
+        "levels",
+        "p50_latency_ms",
+        "p95_latency_ms",
+        "semantic_status_counts"
+      ],
+      "properties": {
+        "run_id": { "type": "string", "minLength": 1 },
+        "step_count": { "type": "integer", "minimum": 0 },
+        "flag_count": { "type": "integer", "minimum": 0 },
+        "levels": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ok", "warn", "block"],
+          "properties": {
+            "ok": { "type": "integer", "minimum": 0 },
+            "warn": { "type": "integer", "minimum": 0 },
+            "block": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "p50_latency_ms": { "type": ["number", "null"], "minimum": 0 },
+        "p95_latency_ms": { "type": ["number", "null"], "minimum": 0 },
+        "semantic_status_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["laya", "fallback", "unavailable", "not_applicable"],
+          "properties": {
+            "laya": { "type": "integer", "minimum": 0 },
+            "fallback": { "type": "integer", "minimum": 0 },
+            "unavailable": { "type": "integer", "minimum": 0 },
+            "not_applicable": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "StreamEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "kind",
+        "run_id",
+        "seq",
+        "event",
+        "verdict"
+      ],
+      "properties": {
+        "schema_version": { "const": "1" },
+        "kind": { "const": "step" },
+        "run_id": { "type": "string", "minLength": 1 },
+        "seq": { "type": "integer", "minimum": 1 },
+        "event": { "$ref": "#/$defs/Event" },
+        "verdict": { "$ref": "#/$defs/Verdict" }
+      }
+    }
+  }
+}
