@@ -16,6 +16,22 @@ Six-hour, two-developer hackathon build.
 
 ## Ports and setup
 
+One command (starts detector + dashboard, auto-uses :8100 if :8000 is busy,
+Ctrl+C stops both):
+
+```bash
+./demo/run.sh
+```
+
+Then, in another terminal:
+
+```bash
+cd agent && uv sync && uv run python replay.py runs/demo.jsonl \
+  --target http://localhost:8000 --run-id demo_001 --delay-ms 350
+```
+
+(Use the port printed by `run.sh` — 8100 when 8000 is occupied.)
+
 | Piece | Command | Port |
 |---|---|---|
 | Detector (A) | `cd detector && uv sync && uv run uvicorn api.main:app --host 127.0.0.1 --port 8000` | 8000 |
