@@ -122,6 +122,7 @@ cd web && npm test && npm run build                                      # state
 - `unsupported_claim` (s21) requires the backend's real Laya verifier; if it
   reports `unavailable`, the UI marks that claim **unverified** rather than
   detected. Deterministic cases are unaffected.
+- [Two-minute hackathon pitch](demo/HACKATHON_SCRIPT.md) covers the Devin integration status, novelty, technical pipeline, and screen cues.
 - `demo/DEMO.md` has the 90-second walkthrough.
 
 ## Verify a real Laya replay
