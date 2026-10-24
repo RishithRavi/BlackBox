@@ -62,6 +62,9 @@ def create_app(
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.cors_origins),
+        # Any loopback port (dev servers, preview proxies). This is a local
+        # no-auth demo service; non-loopback origins still get no CORS grant.
+        allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
         allow_methods=["GET", "POST"],
         allow_headers=["*"],
     )
