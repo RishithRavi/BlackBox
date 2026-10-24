@@ -53,3 +53,17 @@ final result: passed
 - [x] Clearly separate illustrative sample and persisted results.
 - [x] Browser interaction, responsive and console checks.
 - [x] Recompare after P2 corrections; preserve source and implementation evidence.
+
+## Scoped follow-up: technical pipeline disclosure
+
+final result: passed
+
+- Request: expose Laya, score fusion, FastAPI, SQLite and SSE for hackathon judges while retaining the approved simple light UI.
+- Source baseline: `demo/design/timeline-implementation.png` (approved light dashboard). Added content is intentional under the new request; existing navigation, typography, colors, timeline, graph, and inspector are preserved.
+- Latest browser evidence: `demo/design/pipeline-collapsed.png`, `demo/design/pipeline-expanded.png`, `demo/design/pipeline-mobile.png`.
+- Full-view comparison: `demo/design/pipeline-comparison.png` combines the baseline and revised 1586 × 992 screenshots, both density 1, scroll zero, same issue-reference selection. Focused pipeline and score details were inspected at native size in the expanded screenshot. No source-asset replacement or density mismatch.
+- Fonts, tokens and icon vocabulary remain Inter/Phosphor with fine borders, muted text and restrained blue selection. The default addition is an approximately 82px collapsed strip. Stage explanations and score breakdown only open after interaction; intentional page growth is scrollable.
+- No P0/P1/P2 findings. Mobile (390 × 844) uses a horizontally scrollable stage row and vertically stacked explanation; document width remains exactly 390px both collapsed and expanded. Minor small-text density is consistent with the existing secondary metadata.
+- Tested every stage: FastAPI via keyboard Enter, Rules, Laya, Score fusion, SQLite, SSE; disclosure open/close; selected-step changes update reported signals. Live `light_ui_qa` shows actual unavailable Laya, 24 stored records, and SSE resume cursor #24. Example mode explicitly uses illustrative labels and does not claim a database write or real stream.
+- Score data is display-only: the backend's stored risk is shown unchanged. Missing findings are null/“—”, not manufactured probabilities. Semantic finding confidence is distinguished from raw Laya support probability; only total backend latency is shown.
+- Console errors: none. Production build and all 13 state/presentation tests pass, including regressions for separate signals, preserved backend score and unavailable semantic output.

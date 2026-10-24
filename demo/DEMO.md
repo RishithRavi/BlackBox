@@ -11,8 +11,8 @@ cd web && npm install && npm run dev -- --host 127.0.0.1 --port 5173            
 ```
 
 Open `http://localhost:5173/?run_id=demo_001`. Header should show
-"connecting…" then "live" once the stream opens; note the
-"backend semantic:" indicator (laya / fallback / unavailable).
+"Connecting…" then "Live connection" once the stream opens; note the
+semantic verifier status (Laya, fallback, or unavailable).
 
 ## Walkthrough (~90s)
 
@@ -25,9 +25,10 @@ Open `http://localhost:5173/?run_id=demo_001`. Header should show
      --target http://localhost:8000 --run-id demo_001 --delay-ms 350
    ```
    The console prints each step's verdict as the dashboard timeline fills in.
-3. **(0:25) Timeline:** rows stream in with OK/WARN/BLOCK levels, finding
-   counts, per-step latency, and verifier mode. Metrics bar updates (step
-   count, level totals, P50/P95).
+3. **(0:25) Timeline:** rows stream in with No findings / Warning / High risk
+   labels, per-step latency, and verifier status. The summary updates step
+   count, flagged steps, and P95 latency. The slim detection pipeline makes
+   FastAPI, rules, Laya, score fusion, SQLite and SSE visible.
 4. **(0:40) Inspect failures — click each flagged row:**
    - **s08** `package_missing` — install of a package the recorded registry
      snapshot said doesn't exist; click the evidence reference to jump to the
@@ -45,10 +46,12 @@ Open `http://localhost:5173/?run_id=demo_001`. Header should show
 5. **(1:05) Graph:** step → claim → evidence columns; `supported_by` edges
    only where evidence exists — the unsupported claim has none. Parent edges
    are order, not contamination.
-6. **(1:15) Robustness beat (optional):** refresh the page — the run reloads
-   from persisted steps; re-run the replay with a **new** run ID
-   (`--run-id demo_002`) for a second clean pass. Re-POSTing the same event
-   returns the original verdict without duplicate records.
+6. **(1:15) Technical beat:** click **Score fusion** in the pipeline strip.
+   Show reported rule/semantic finding confidence and the backend fused risk.
+   Click **SQLite** for commit-before-publish and **SSE** for catch-up, resume
+   cursor and deduplication. These expand on demand; the main screen stays
+   simple. A refresh reloads stored records; identical retries do not duplicate
+   steps. Use a new run ID for a new replay.
 7. **(1:25) Close:** "Five planted failures, each with rule, span, evidence —
    or an explicit reason evidence is missing. Semantic status is shown, not
    assumed."
@@ -59,3 +62,5 @@ Open `http://localhost:5173/?run_id=demo_001`. Header should show
 - If unavailable: four deterministic detections + s21 shown as unverified —
   do not present it as five detections.
 - Label any mock-mode footage as DEV MOCK; never use it as the demo.
+
+The pipeline's semantic number is confidence in a reported finding, not a raw Laya support probability. Do not describe the illustrative `?sample=1` route as live inference.

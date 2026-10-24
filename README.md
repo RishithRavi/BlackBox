@@ -74,6 +74,7 @@ recorded evidence, not proof of current registry state.
 
 The dashboard uses the light design from the approved mockups. There is no dark theme.
 
+- **Detection pipeline** — a compact FastAPI → Rules → Laya → Score fusion → SQLite → SSE strip. Select a stage for an expandable explanation and a breakdown of reported rule confidence, semantic finding confidence, and the backend's fused risk. Sequence and live-channel state are shown; unavailable checks stay unavailable. The UI never invents raw model probabilities or stage timings.
 - **Timeline / Graph tabs** switch between recorded activity and an interactive evidence graph.
 - **Timeline** shows action summaries, findings, exact backend latency and an All / Flagged filter. Selecting a row opens its detail panel; Follow latest scrolls to incoming steps.
 - **Step details** highlight flagged arguments/claims, show referenced evidence or explicitly labeled earlier context, and link back to source steps. Full original events remain available in an expandable section.

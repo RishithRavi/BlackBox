@@ -15,6 +15,7 @@ import {
 import { formatLatency } from "./presentation";
 import { API_BASE, USE_MOCK } from "./api";
 import { sampleGraph, sampleRecords } from "./demoData";
+import { DetectionPipeline } from "./components/DetectionPipeline";
 import { GraphView } from "./components/GraphView";
 import { StepDetail } from "./components/StepDetail";
 import { Timeline } from "./components/Timeline";
@@ -287,6 +288,14 @@ export default function App() {
             </button>
           </div>
         ) : null}
+        <DetectionPipeline
+          record={selected}
+          sample={sample}
+          status={run.status}
+          runId={run.runId}
+          cursor={run.state.maxSeq}
+          persistedCount={run.records.length}
+        />
         <div className="view-tabs" role="tablist" aria-label="Run view">
           {(["timeline", "graph"] as const).map((view) => (
             <button
