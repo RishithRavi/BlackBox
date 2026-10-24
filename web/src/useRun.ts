@@ -19,11 +19,7 @@ import {
 import type { Health, Metrics, RunGraph, StepRecord } from "./types";
 
 export type ConnStatus =
-  | "connecting"
-  | "live"
-  | "reconnecting"
-  | "offline"
-  | "mock";
+  "connecting" | "live" | "reconnecting" | "offline" | "mock";
 
 export interface UseRun {
   runId: string;
@@ -40,7 +36,7 @@ export interface UseRun {
 const DEBOUNCE_MS = 400;
 const HEALTH_POLL_MS = 10000;
 
-export function useRun(initialRunId: string): UseRun {
+export function useRun(initialRunId: string, enabled = true): UseRun {
   const [runId, setRunId] = useState(initialRunId);
   const [state, setState] = useState<RunState>(() => emptyRun(initialRunId));
   const [status, setStatus] = useState<ConnStatus>("connecting");
@@ -52,8 +48,13 @@ export function useRun(initialRunId: string): UseRun {
 
   // Backend health: polled so degraded semantic status stays visible.
   useEffect(() => {
+    if (!enabled) return;
     if (USE_MOCK) {
-      setHealth({ status: "ok", schema_version: "1", semantic_status: "unavailable" });
+      setHealth({
+        status: "ok",
+        schema_version: "1",
+        semantic_status: "unavailable",
+      });
       return;
     }
     let cancelled = false;
@@ -68,10 +69,11 @@ export function useRun(initialRunId: string): UseRun {
       cancelled = true;
       clearInterval(t);
     };
-  }, []);
+  }, [enabled]);
 
   // Run lifecycle: fresh state, snapshot load, then tail via SSE.
   useEffect(() => {
+    if (!enabled) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     const generation = { current: true };
     const abort = new AbortController();
@@ -84,14 +86,26 @@ export function useRun(initialRunId: string): UseRun {
     setError(null);
     setStatus(USE_MOCK ? "mock" : "connecting");
 
+    let derivedRequest = 0;
     const refreshDerived = () => {
+      const request = ++derivedRequest;
       if (USE_MOCK) {
         setGraph(mockGraph());
         setMetrics(mockMetrics());
         return;
       }
-      getGraph(runId, abort.signal).then((g) => generation.current && setGraph(g)).catch(() => {});
-      getMetrics(runId, abort.signal).then((m) => generation.current && setMetrics(m)).catch(() => {});
+      getGraph(runId, abort.signal)
+        .then(
+          (g) =>
+            generation.current && request === derivedRequest && setGraph(g),
+        )
+        .catch(() => {});
+      getMetrics(runId, abort.signal)
+        .then(
+          (m) =>
+            generation.current && request === derivedRequest && setMetrics(m),
+        )
+        .catch(() => {});
     };
 
     const scheduleDerived = () => {
@@ -102,6 +116,7 @@ export function useRun(initialRunId: string): UseRun {
     if (USE_MOCK) {
       stream = openMockStream();
       stream.addEventListener("step", (e: Event) => {
+        if (!generation.current) return;
         const msg = e as MessageEvent<string>;
         try {
           const env = { ...JSON.parse(msg.data), run_id: runId };
@@ -130,9 +145,16 @@ export function useRun(initialRunId: string): UseRun {
         if (!generation.current || !records) return;
         const maxSeq = records.reduce((m, r) => Math.max(m, r.seq), 0);
         stream = openStream(runId, maxSeq);
-        stream.onopen = () => generation.current && setStatus("live");
+        stream.onopen = () => {
+          if (generation.current) {
+            setStatus("live");
+            setError(null);
+            refreshDerived();
+          }
+        };
         stream.onerror = () => generation.current && setStatus("reconnecting");
         stream.addEventListener("step", (e: Event) => {
+          if (!generation.current) return;
           const msg = e as MessageEvent<string>;
           try {
             const env = JSON.parse(msg.data);
@@ -155,9 +177,16 @@ export function useRun(initialRunId: string): UseRun {
         // Even when the snapshot fails, still open a stream so a run that
         // starts later (or a backend that comes up) can be tailed.
         stream = openStream(runId, 0);
-        stream.onopen = () => generation.current && setStatus("live");
+        stream.onopen = () => {
+          if (generation.current) {
+            setStatus("live");
+            setError(null);
+            refreshDerived();
+          }
+        };
         stream.onerror = () => generation.current && setStatus("reconnecting");
         stream.addEventListener("step", (e: Event) => {
+          if (!generation.current) return;
           const msg = e as MessageEvent<string>;
           try {
             setState((s) => applyEnvelope(s, JSON.parse(msg.data)));
@@ -174,7 +203,7 @@ export function useRun(initialRunId: string): UseRun {
       stream?.close();
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [runId]);
+  }, [runId, enabled]);
 
   const records = orderedSteps(state);
 
@@ -182,5 +211,15 @@ export function useRun(initialRunId: string): UseRun {
     setRunId(id.trim() || "demo_001");
   }, []);
 
-  return { runId, state, records, status, health, graph, metrics, error, setRunId: setRunIdSafe };
+  return {
+    runId,
+    state,
+    records,
+    status,
+    health,
+    graph,
+    metrics,
+    error,
+    setRunId: setRunIdSafe,
+  };
 }

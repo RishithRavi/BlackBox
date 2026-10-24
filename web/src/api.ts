@@ -17,7 +17,7 @@ async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   if (!resp.ok) {
     let detail: unknown = await resp.text();
     try {
-      detail = JSON.parse(await resp.text());
+      detail = JSON.parse(detail as string);
     } catch {
       /* keep text */
     }
@@ -31,7 +31,9 @@ export class ApiError extends Error {
     public status: number,
     public detail: unknown,
   ) {
-    super(`HTTP ${status}: ${typeof detail === "string" ? detail : JSON.stringify(detail)}`);
+    super(
+      `HTTP ${status}: ${typeof detail === "string" ? detail : JSON.stringify(detail)}`,
+    );
   }
 }
 
@@ -50,7 +52,10 @@ export async function getSteps(
   return data.steps;
 }
 
-export function getGraph(runId: string, signal?: AbortSignal): Promise<RunGraph> {
+export function getGraph(
+  runId: string,
+  signal?: AbortSignal,
+): Promise<RunGraph> {
   return getJson<RunGraph>(`/runs/${encodeURIComponent(runId)}/graph`, signal);
 }
 

@@ -56,23 +56,24 @@ recorded evidence, not proof of current registry state.
 
 ## Dashboard
 
-- **Timeline** — seq, step, type, tool, level (text + color), finding count,
-  semantic mode, backend latency (never inferred from replay timing).
-- **Step detail** — raw content/args, verdict, findings with exact span
-  highlights, clickable evidence references that jump to the source step.
-- **Evidence graph** — compact SVG; parent vs. contains vs. supported_by vs.
-  derived_from edges are visually distinct. Unsupported claims have no
-  fabricated support edge.
-- **Metrics** — step/finding counts, level totals, P50/P95, semantic-status
-  counts, all from `GET /runs/{id}/metrics`.
-- State sync: loads `/steps`, then tails `EventSource` from `after=<max seq>`,
-  deduped by `(run_id, seq)`; reconnect/run-switch safe. `unavailable`
-  semantic status is shown as "unverified", never as a pass.
+The dashboard uses the light design from the approved mockups. There is no dark theme.
 
-### Dev mock (offline UI work only)
+- **Timeline / Graph tabs** switch between recorded activity and an interactive evidence graph.
+- **Timeline** shows action summaries, findings, exact backend latency and an All / Flagged filter. Selecting a row opens its detail panel; Follow latest scrolls to incoming steps.
+- **Step details** highlight flagged arguments/claims, show referenced evidence or explicitly labeled earlier context, and link back to source steps. Full original events remain available in an expandable section.
+- **Graph** supports node selection, keyboard activation, pan/zoom, fit view, and an All nodes / Selected step scope. Parent links show sequence only. Missing semantic checks show Unverified rather than Unsupported.
+- **Replay controls** play, pause, resume, restart and change the speed of existing records. They only change the presentation: no tool execution, detector calls, stored verdict changes or SSE ingestion is paused.
+- **Run switching** is available from Runs, Settings or the run ID. Snapshots load before SSE catch-up/tail; duplicate sequences and late callbacks from previous runs are ignored.
+- The summary shows visible steps, flagged steps (not finding count), P95 backend latency, and actual verifier readiness. During playback, counts/latency reflect the visible prefix. Backend metrics are also fetched for integration readiness.
+- The layout stacks on narrow screens. Inter fonts are bundled locally; icons use Phosphor and graph rendering uses React Flow.
 
-`VITE_USE_MOCK=true npm run dev` drives a canned script and shows a prominent
-**DEV MOCK** banner. It is never the detection source for the demo.
+### Sample preview (no backend required)
+
+Open `http://localhost:5173/?sample=1` or choose **Explore sample replay** in Settings. The 18-step sample includes the five planted failures and a small evidence graph. It is explicitly labeled **illustrative demo data**. Its canned verdicts and sample Laya status are never sent to the detector or presented as actual model results.
+
+Normal mode remains the default: `http://localhost:5173/?run_id=demo_001` reads the actual backend. An unavailable Laya verifier is visibly marked, and unchecked claims remain unverified. See `detector/README.md` for real model setup.
+
+The older `VITE_USE_MOCK=true` developer stream is still supported and labeled Development mock data. Prefer the sample-preview route for reviewing the new UI, and leave this variable false for live runs.
 
 ## Verify
 
@@ -83,8 +84,7 @@ cd web && npm test && npm run build                                      # state
 
 ## Current limitations
 
-- Backend from Session A is integrated separately; until then the dashboard
-  shows `offline`/`connecting` against a missing backend — by design.
+- Start the detector separately for live runs. The UI shows disconnected/reconnecting states when it cannot reach the backend; the sample preview works independently.
 - `unsupported_claim` (s21) requires the backend's real Laya verifier; if it
   reports `unavailable`, the UI marks that claim **unverified** rather than
   detected. Deterministic cases are unaffected.
