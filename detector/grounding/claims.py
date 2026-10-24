@@ -1,10 +1,11 @@
 """Deterministic claim extraction and evidence text building.
 
 Claims come from agent-authored text (llm/final content, create_pr
-title/body). Sentences that assert a passing test state are excluded — the
-claim_without_action rule owns those deterministically. Sentences whose only
-assertion is an issue reference ("Fixes issue 417") are skipped so issue
-linkage stays an arg_provenance concern, not a semantic one.
+body). A PR title is a label, not an assertion, so it is not mined.
+Sentences that assert a passing test state are excluded — the
+claim_without_action rule owns those deterministically. Sentences whose
+only assertion is an issue reference ("Fixes issue 417") are skipped so
+issue linkage stays an arg_provenance concern, not a semantic one.
 """
 
 from __future__ import annotations
@@ -59,9 +60,8 @@ def extract_semantic_claims(event: dict[str, Any]) -> list[dict[str, str]]:
         and event["tool"]["name"] == "create_pr"
     ):
         args = event["tool"].get("args") or {}
-        for key in ("title", "body"):
-            if isinstance(args.get(key), str):
-                sources.append((args[key], f"/tool/args/{key}"))
+        if isinstance(args.get("body"), str):
+            sources.append((args["body"], "/tool/args/body"))
     else:
         return []
 

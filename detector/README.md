@@ -81,9 +81,10 @@ Primary verifier is **Laya**:
   answers all per-claim `noul` questions at once.
 
 Each extracted claim (assertion sentences from `llm`/`final` content and
-`create_pr` title/body, max 4) becomes one `noul` question — the model
-returns the probability that the evidence document supports the claim —
-packed into a single `predict` call (one forward pass). Scores normalize
+`create_pr` body — titles are labels, not assertions; max 4) is embedded
+in the *state* next to the evidence document, which measured far more
+discriminating than claim-in-question prompts, and all per-claim states
+run through a single `predict_batch` call. The `noul` score normalizes
 to `supported` at p >= 0.70, `unsupported` at p <= 0.35 (confidence 1-p),
 and `unknown` in between. An `unsupported` result at confidence >= 0.65
 produces an `unsupported_claim` warning. If Laya reports the evidence

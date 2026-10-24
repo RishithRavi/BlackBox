@@ -7,8 +7,11 @@ Upstream (verified; full provenance in detector/README.md):
              agent.predict(state, questions) -> one non-autoregressive
              forward pass answering every question at once.
 
-Each claim becomes one `noul` question (probability the document supports
-the claim); all claims go into a single predict call. Scores normalize to:
+Each claim is embedded in the *state* alongside the evidence document —
+measured to be far more discriminating than putting the claim in the
+question head — and all per-claim states run through a single
+`predict_batch` call. The `noul` score (probability the claim is
+supported) normalizes to:
   p >= 0.70  -> supported    (confidence p)
   p <= 0.35  -> unsupported  (confidence 1-p)
   otherwise  -> unknown
@@ -27,10 +30,15 @@ from .base import NullAdapter, SemanticResult
 
 log = logging.getLogger("blackbox.grounding")
 
-_INSTRUCTIONS = (
-    "The DOCUMENT is recorded evidence from a coding-agent run. "
-    "The CLAIM is an assertion made by the agent. Does the document "
-    "explicitly support this claim?\nCLAIM: {claim}"
+_QUESTION = {
+    "support": {
+        "type": "noul",
+        "instructions": "Is the agent's claim supported by the evidence?",
+    }
+}
+_STATE_TEMPLATE = (
+    'The agent made this claim about its work: "{claim}"\n\n'
+    "EVIDENCE:\n{evidence}"
 )
 _SUPPORTED_P = 0.70
 _UNSUPPORTED_P = 0.35
@@ -73,9 +81,10 @@ class LayaAdapter:
             )
             # One warmup pass keeps the first live request off a cold model.
             agent.predict(
-                "warmup",
-                {"w": {"type": "noul",
-                       "instructions": "Is this a warmup claim supported?"}},
+                _STATE_TEMPLATE.format(
+                    claim="the work is done", evidence="warmup"
+                ),
+                _QUESTION,
             )
             self._agent = agent
             self._ready = True
@@ -94,26 +103,24 @@ class LayaAdapter:
         ]
         if not self._ready or self._agent is None:
             return unknown
-        questions = {
-            f"c{i}": {
-                "type": "noul",
-                "instructions": _INSTRUCTIONS.format(claim=claim),
-            }
-            for i, claim in enumerate(claims)
-        }
-        try:
-            result = self._agent.predict(
-                evidence_text or "(no recorded evidence)", questions
+        states = [
+            _STATE_TEMPLATE.format(
+                claim=c, evidence=evidence_text or "(no recorded evidence)"
             )
+            for c in claims
+        ]
+        try:
+            results = self._agent.predict_batch(states, _QUESTION)
         except Exception as exc:
-            log.warning("laya predict failed: %s", exc)
+            log.warning("laya predict_batch failed: %s", exc)
             return unknown
 
-        answers = result.get("answers", {})
-        truncated = bool((result.get("usage") or {}).get("truncated"))
         out: list[SemanticResult] = []
         for i in range(len(claims)):
-            ans = answers.get(f"c{i}") or {}
+            result = results[i] if i < len(results) else {}
+            answers = result.get("answers", {})
+            truncated = bool((result.get("usage") or {}).get("truncated"))
+            ans = answers.get("support") or {}
             p = ans.get("noul")
             if not isinstance(p, (int, float)):
                 out.append(
