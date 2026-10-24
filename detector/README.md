@@ -8,8 +8,8 @@ makes each finding inspectable through a provenance graph.
 
 ```bash
 cd detector
-uv sync
-uv run uvicorn api.main:app --host 127.0.0.1 --port 8000
+uv sync --python 3.12 --extra laya
+SEMANTIC_TIMEOUT_MS=2000 uv run --extra laya uvicorn api.main:app --host 127.0.0.1 --port 8000
 ```
 
 One Uvicorn worker only — per-run serialization uses process-local locks
@@ -20,7 +20,7 @@ and they do not protect multiple workers. SQLite lives in
 
 ```bash
 cd detector
-uv run pytest
+uv run --extra laya pytest
 ```
 
 ## Endpoints
@@ -95,11 +95,13 @@ To enable it:
 
 ```bash
 cd detector
-uv sync --extra laya    # pulls torch + transformers + model weights
+uv sync --python 3.12 --extra laya    # installs runtime; first server startup downloads weights
 LAYA_MODEL_ID=convaiinnovations/laya \
 SEMANTIC_TIMEOUT_MS=2000 \
-uv run uvicorn api.main:app --host 127.0.0.1 --port 8000
+uv run --extra laya uvicorn api.main:app --host 127.0.0.1 --port 8000
 ```
+
+Keep `--extra laya` on later `uv run` commands so environment synchronization retains the optional verifier. Python 3.12 is pinned in `.python-version`. The root `./demo/run.sh` installs/enables Laya by default, waits for a real `semantic_status:laya`, and chooses available API/web ports. Use `SEMANTIC_ENABLED=0 ./demo/run.sh` only for explicit degraded mode.
 
 ### Configuration
 
@@ -118,9 +120,9 @@ uv run uvicorn api.main:app --host 127.0.0.1 --port 8000
 Without the `laya` extra the detector runs in explicit degraded mode:
 `/health` reports `semantic_status: unavailable`, claim-bearing events get
 `semantic_status: unavailable`, and **no** `unsupported_claim` findings
-are emitted. On a CPU, Laya inference is roughly 150–450 ms per pass —
-raise `SEMANTIC_TIMEOUT_MS` (e.g. 2000) or every semantic check will time
-out into `unavailable`. Timeouts never mutate a stored verdict: the
+are emitted. On the validated M2 setup, semantic checks took 170–436 ms; use
+`SEMANTIC_TIMEOUT_MS=2000` for this local demo rather than the 150ms
+aspirational budget. See `../demo/LAYA_VALIDATION.md` for the measured run. Timeouts never mutate a stored verdict: the
 blocking inference runs in a bounded thread pool, `asyncio.wait_for`
 bounds the wait, and late results are discarded.
 
@@ -138,3 +140,7 @@ bounds the wait, and late results are discarded.
   spread.
 - Warm-path latency target is aspirational (<200 ms/step); see metrics
   for the measured P50/P95 on your machine.
+
+## Verified local model run
+
+See `../demo/LAYA_VALIDATION.md` for the measured real-model replay, matched positive/negative controls, runtime versions, and limitations. This is separate from the illustrative `?sample=1` UI.

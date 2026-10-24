@@ -67,3 +67,7 @@ final result: passed
 - Tested every stage: FastAPI via keyboard Enter, Rules, Laya, Score fusion, SQLite, SSE; disclosure open/close; selected-step changes update reported signals. Live `light_ui_qa` shows actual unavailable Laya, 24 stored records, and SSE resume cursor #24. Example mode explicitly uses illustrative labels and does not claim a database write or real stream.
 - Score data is display-only: the backend's stored risk is shown unchanged. Missing findings are null/“—”, not manufactured probabilities. Semantic finding confidence is distinguished from raw Laya support probability; only total backend latency is shown.
 - Console errors: none. Production build and all 13 state/presentation tests pass, including regressions for separate signals, preserved backend score and unavailable semantic output.
+
+## Real Laya setup verification
+
+The local preview now opens a real persisted run (`laya_live_001`) with `Laya connected`, `Persisted run data`, actual semantic finding confidence 0.8821 (displayed 0.88), and no illustrative label. Browser console errors: none. No layout or API contract change was needed. Evidence and measured performance are in `demo/LAYA_VALIDATION.md` and `demo/validation/laya-live-dashboard.png`; the five-case verifier and all 54 backend regression tests passed. Historical sample/degraded-mode checks above remain separate from this real-model validation.

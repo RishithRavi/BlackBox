@@ -88,6 +88,10 @@ class LayaAdapter:
             )
             self._agent = agent
             self._ready = True
+            log.info(
+                "Laya ready: model=%s revision=%s device=%s",
+                self.model_id, self.revision, str(agent.device),
+            )
         except Exception as exc:  # import, download, or init failure
             self.load_error = f"{type(exc).__name__}: {exc}"
             log.warning("laya adapter unavailable: %s", self.load_error)

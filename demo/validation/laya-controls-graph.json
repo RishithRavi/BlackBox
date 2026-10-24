@@ -1,0 +1,103 @@
+{
+  "run_id": "laya_controls_001",
+  "nodes": [
+    {
+      "id": "step:s01",
+      "kind": "step",
+      "label": "s01",
+      "step_id": "s01"
+    },
+    {
+      "id": "evidence:s01:user",
+      "kind": "evidence",
+      "label": "user input (s01)",
+      "step_id": "s01"
+    },
+    {
+      "id": "step:s02",
+      "kind": "step",
+      "label": "s02",
+      "step_id": "s02"
+    },
+    {
+      "id": "step:s03",
+      "kind": "step",
+      "label": "s03",
+      "step_id": "s03"
+    },
+    {
+      "id": "evidence:s03:repo",
+      "kind": "evidence",
+      "label": "inspect_repo result (s03)",
+      "step_id": "s03"
+    },
+    {
+      "id": "step:s04",
+      "kind": "step",
+      "label": "s04",
+      "step_id": "s04"
+    },
+    {
+      "id": "claim:s04:0",
+      "kind": "claim",
+      "label": "I changed EXPIRY_SECONDS from 3600 to 300.",
+      "step_id": "s04"
+    },
+    {
+      "id": "step:s05",
+      "kind": "step",
+      "label": "s05",
+      "step_id": "s05"
+    },
+    {
+      "id": "claim:s05:0",
+      "kind": "claim",
+      "label": "Added automatic retry with exponential backoff for failed cache writes.",
+      "step_id": "s05"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:parent:s02",
+      "source": "step:s02",
+      "target": "step:s01",
+      "relation": "parent"
+    },
+    {
+      "id": "e:parent:s03",
+      "source": "step:s03",
+      "target": "step:s02",
+      "relation": "parent"
+    },
+    {
+      "id": "e:parent:s04",
+      "source": "step:s04",
+      "target": "step:s03",
+      "relation": "parent"
+    },
+    {
+      "id": "e:contains:claim:s04:0",
+      "source": "step:s04",
+      "target": "claim:s04:0",
+      "relation": "contains"
+    },
+    {
+      "id": "e:support:claim:s04:0",
+      "source": "claim:s04:0",
+      "target": "evidence:s03:repo",
+      "relation": "supported_by"
+    },
+    {
+      "id": "e:parent:s05",
+      "source": "step:s05",
+      "target": "step:s04",
+      "relation": "parent"
+    },
+    {
+      "id": "e:contains:claim:s05:0",
+      "source": "step:s05",
+      "target": "claim:s05:0",
+      "relation": "contains"
+    }
+  ]
+}

@@ -6,11 +6,13 @@ live, and each finding inspectable with evidence.
 ## Before you start (one-time)
 
 ```bash
-cd detector && uv sync && uv run uvicorn api.main:app --host 127.0.0.1 --port 8000   # Session A
+cd detector && uv sync --extra laya && SEMANTIC_TIMEOUT_MS=2000 uv run --extra laya uvicorn api.main:app --host 127.0.0.1 --port 8000   # Session A
 cd web && npm install && npm run dev -- --host 127.0.0.1 --port 5173                  # Session B
 ```
 
-Open `http://localhost:5173/?run_id=demo_001`. Header should show
+Alternatively run `./demo/run.sh` from the repository root and use its printed URL/replay command. It enables Laya and selects free ports.
+
+Open `http://localhost:5173/?run_id=demo_001` for the manual commands above. Header should show
 "Connecting…" then "Live connection" once the stream opens; note the
 semantic verifier status (Laya, fallback, or unavailable).
 

@@ -16,8 +16,8 @@ Six-hour, two-developer hackathon build.
 
 ## Ports and setup
 
-One command (starts detector + dashboard, auto-uses :8100 if :8000 is busy,
-Ctrl+C stops both):
+One command (installs/enables real Laya, starts detector + dashboard, chooses
+available ports, and waits for model readiness; Ctrl+C stops both):
 
 ```bash
 ./demo/run.sh
@@ -27,14 +27,14 @@ Then, in another terminal:
 
 ```bash
 cd agent && uv sync && uv run python replay.py runs/demo.jsonl \
-  --target http://localhost:8000 --run-id demo_001 --delay-ms 350
+  --target http://localhost:8000 --run-id YOUR_PRINTED_RUN_ID --delay-ms 350
 ```
 
-(Use the port printed by `run.sh` — 8100 when 8000 is occupied.)
+Use the exact replay command and dashboard URL printed by `run.sh`; its fresh run ID avoids reusing earlier verdicts. First model startup may take several minutes. The launcher uses a 2000ms semantic timeout for local inference and keeps the optional Laya dependencies installed. `SEMANTIC_ENABLED=0 ./demo/run.sh` explicitly opts into degraded mode.
 
 | Piece | Command | Port |
 |---|---|---|
-| Detector (A) | `cd detector && uv sync && uv run uvicorn api.main:app --host 127.0.0.1 --port 8000` | 8000 |
+| Detector (A) | `cd detector && uv sync --extra laya && SEMANTIC_TIMEOUT_MS=2000 uv run --extra laya uvicorn api.main:app --host 127.0.0.1 --port 8000` | 8000 |
 | Dashboard (B) | `cd web && npm install && npm run dev -- --host 127.0.0.1 --port 5173` | 5173 |
 | Replay (B) | `cd agent && uv sync && uv run python replay.py runs/demo.jsonl --target http://localhost:8000 --run-id demo_001 --delay-ms 350` | — |
 
@@ -106,3 +106,13 @@ cd web && npm test && npm run build                                      # state
   reports `unavailable`, the UI marks that claim **unverified** rather than
   detected. Deterministic cases are unaffected.
 - `demo/DEMO.md` has the 90-second walkthrough.
+
+## Verify a real Laya replay
+
+After replaying the printed run, execute:
+
+```bash
+python3 demo/verify_run.py --target http://127.0.0.1:8000 --run-id YOUR_PRINTED_RUN_ID
+```
+
+Use the actual printed port. This reads persisted verdicts, checks all five planted failure cases and clean controls, and requires real Laya status for the semantic case. It never sends expected labels to the detector. See [measured local results](demo/LAYA_VALIDATION.md).
